@@ -1,7 +1,6 @@
 package com.likkai.linkrouter.ui.screens
 
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
@@ -34,40 +33,46 @@ fun BrowserPickerDialog(
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             } else {
-                LazyColumn {
-                    items(browsers) { browser ->
-                        val isSelected = browser.packageName == selectedPackage
-                        ListItem(
-                            headlineContent = {
-                                Text(
-                                    browser.label,
-                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
-                                )
-                            },
-                            supportingContent = {
-                                Text(
-                                    browser.packageName,
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            },
-                            leadingContent = {
-                                BrowserIcon(
-                                    packageName = browser.packageName,
-                                    size = 32.dp
-                                )
-                            },
-                            trailingContent = {
-                                if (isSelected) {
-                                    Icon(
-                                        Icons.Default.CheckCircle,
-                                        contentDescription = "Selected",
-                                        tint = MaterialTheme.colorScheme.primary
+                Surface(
+                    shape = MaterialTheme.shapes.medium,
+                    color = MaterialTheme.colorScheme.surfaceVariant,
+                    tonalElevation = 2.dp
+                ) {
+                    LazyColumn {
+                        items(browsers) { browser ->
+                            val isSelected = browser.packageName == selectedPackage
+                            ListItem(
+                                headlineContent = {
+                                    Text(
+                                        browser.label,
+                                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
                                     )
-                                }
-                            },
-                            modifier = Modifier.clickable { onSelect(browser) }
-                        )
+                                },
+                                supportingContent = {
+                                    Text(
+                                        browser.packageName,
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                },
+                                leadingContent = {
+                                    BrowserIcon(
+                                        packageName = browser.packageName,
+                                        size = 32.dp
+                                    )
+                                },
+                                trailingContent = {
+                                    if (isSelected) {
+                                        Icon(
+                                            Icons.Default.CheckCircle,
+                                            contentDescription = "Selected",
+                                            tint = MaterialTheme.colorScheme.primary
+                                        )
+                                    }
+                                },
+                                modifier = Modifier.clickable { onSelect(browser) }
+                            )
+                        }
                     }
                 }
             }
