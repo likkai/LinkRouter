@@ -6,8 +6,15 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.runtime.*
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
 import com.likkai.linkrouter.data.BrowserRule
 import com.likkai.linkrouter.ui.MainViewModel
 import com.likkai.linkrouter.ui.SettingsViewModel
@@ -34,6 +41,7 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             LinkRouterTheme {
+                val navController = rememberNavController()
                 val mainViewModel: MainViewModel = viewModel()
                 val rules by mainViewModel.rules.collectAsState()
                 val browsers by mainViewModel.installedBrowsers.collectAsState()
@@ -43,79 +51,85 @@ class MainActivity : ComponentActivity() {
                 var showAddDialog by remember { mutableStateOf(false) }
                 var editingRule by remember { mutableStateOf<BrowserRule?>(null) }
                 var showDefaultPicker by remember { mutableStateOf(false) }
-                var showSettings by remember { mutableStateOf(false) }
 
-                if (showSettings) {
-                    val settingsViewModel: SettingsViewModel = viewModel()
-                    val followRedirects by settingsViewModel.followRedirects.collectAsState()
-                    val redirectDomains by settingsViewModel.redirectDomains.collectAsState()
+                NavHost(
+                    navController = navController,
+                    startDestination = "rule_list"
+                ) {
+                    composable("rule_list") {
+                        RuleListScreen(
+                            rules = rules,
+                            defaultBrowserLabel = defaultBrowserLabel,
+                            isDefaultBrowser = isDefaultBrowser,
+                            debugMode = debugMode,
+                            onSetDefault = { requestDefaultBrowser() },
+                            onAddRule = { showAddDialog = true },
+                            onEditRule = { rule -> editingRule = rule },
+                            onDeleteRule = { rule -> mainViewModel.deleteRule(rule) },
+                            onToggleRule = { rule -> mainViewModel.toggleRule(rule) },
+                            onMoveUp = { rule -> mainViewModel.moveRuleUp(rule, rules) },
+                            onMoveDown = { rule -> mainViewModel.moveRuleDown(rule, rules) },
+                            onChangeDefaultBrowser = { showDefaultPicker = true },
+                            onToggleDebugMode = { mainViewModel.toggleDebugMode() },
+                            onOpenSettings = { navController.navigate("settings") }
+                        )
+                    }
 
-                    SettingsScreen(
-                        followRedirects = followRedirects,
-                        redirectDomains = redirectDomains,
-                        onToggleFollowRedirects = { settingsViewModel.toggleFollowRedirects() },
-                        onAddDomain = { domain -> settingsViewModel.addDomain(domain) },
-                        onRemoveDomain = { domain -> settingsViewModel.removeDomain(domain) },
-                        onBack = { showSettings = false }
+                    composable("settings") {
+                        val settingsViewModel: SettingsViewModel = viewModel()
+                        val followRedirects by settingsViewModel.followRedirects.collectAsState()
+                        val redirectDomains by settingsViewModel.redirectDomains.collectAsState()
+
+                        SettingsScreen(
+                            followRedirects = followRedirects,
+                            redirectDomains = redirectDomains,
+                            onToggleFollowRedirects = { settingsViewModel.toggleFollowRedirects() },
+                            onAddDomain = { domain -> settingsViewModel.addDomain(domain) },
+                            onRemoveDomain = { domain -> settingsViewModel.removeDomain(domain) },
+                            onBack = { navController.popBackStack() }
+                        )
+                    }
+                }
+
+                // Add rule dialog
+                if (showAddDialog) {
+                    AddEditRuleDialog(
+                        editingRule = null,
+                        installedBrowsers = browsers,
+                        onDismiss = { showAddDialog = false },
+                        onSave = { matchType, pattern, browser ->
+                            mainViewModel.addRule(matchType, pattern, browser)
+                            showAddDialog = false
+                        },
+                        onUpdate = { }
                     )
-                } else {
-                    RuleListScreen(
-                        rules = rules,
-                        defaultBrowserLabel = defaultBrowserLabel,
-                        isDefaultBrowser = isDefaultBrowser,
-                        debugMode = debugMode,
-                        onSetDefault = { requestDefaultBrowser() },
-                        onAddRule = { showAddDialog = true },
-                        onEditRule = { rule -> editingRule = rule },
-                        onDeleteRule = { rule -> mainViewModel.deleteRule(rule) },
-                        onToggleRule = { rule -> mainViewModel.toggleRule(rule) },
-                        onMoveUp = { rule -> mainViewModel.moveRuleUp(rule, rules) },
-                        onMoveDown = { rule -> mainViewModel.moveRuleDown(rule, rules) },
-                        onChangeDefaultBrowser = { showDefaultPicker = true },
-                        onToggleDebugMode = { mainViewModel.toggleDebugMode() },
-                        onOpenSettings = { showSettings = true }
+                }
+
+                // Edit rule dialog
+                editingRule?.let { rule ->
+                    AddEditRuleDialog(
+                        editingRule = rule,
+                        installedBrowsers = browsers,
+                        onDismiss = { editingRule = null },
+                        onSave = { _, _, _ -> },
+                        onUpdate = { updatedRule ->
+                            mainViewModel.updateRule(updatedRule)
+                            editingRule = null
+                        }
                     )
+                }
 
-                    // Add rule dialog
-                    if (showAddDialog) {
-                        AddEditRuleDialog(
-                            editingRule = null,
-                            installedBrowsers = browsers,
-                            onDismiss = { showAddDialog = false },
-                            onSave = { matchType, pattern, browser ->
-                                mainViewModel.addRule(matchType, pattern, browser)
-                                showAddDialog = false
-                            },
-                            onUpdate = { }
-                        )
-                    }
-
-                    // Edit rule dialog
-                    editingRule?.let { rule ->
-                        AddEditRuleDialog(
-                            editingRule = rule,
-                            installedBrowsers = browsers,
-                            onDismiss = { editingRule = null },
-                            onSave = { _, _, _ -> },
-                            onUpdate = { updatedRule ->
-                                mainViewModel.updateRule(updatedRule)
-                                editingRule = null
-                            }
-                        )
-                    }
-
-                    // Default browser picker
-                    if (showDefaultPicker) {
-                        BrowserPickerDialog(
-                            browsers = browsers,
-                            selectedPackage = mainViewModel.defaultBrowserPackage.collectAsState().value,
-                            onSelect = { browser ->
-                                mainViewModel.setDefaultBrowser(browser)
-                                showDefaultPicker = false
-                            },
-                            onDismiss = { showDefaultPicker = false }
-                        )
-                    }
+                // Default browser picker
+                if (showDefaultPicker) {
+                    BrowserPickerDialog(
+                        browsers = browsers,
+                        selectedPackage = mainViewModel.defaultBrowserPackage.collectAsState().value,
+                        onSelect = { browser ->
+                            mainViewModel.setDefaultBrowser(browser)
+                            showDefaultPicker = false
+                        },
+                        onDismiss = { showDefaultPicker = false }
+                    )
                 }
             }
         }
