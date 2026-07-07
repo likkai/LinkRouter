@@ -3,6 +3,8 @@ package com.likkai.linkrouter
 import android.app.role.RoleManager
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.BackHandler
+import androidx.activity.compose.LocalActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
@@ -17,6 +19,7 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.likkai.linkrouter.data.BrowserRule
 import com.likkai.linkrouter.ui.MainViewModel
@@ -46,14 +49,21 @@ class MainActivity : ComponentActivity() {
             LinkRouterTheme {
                 val navController = rememberNavController()
                 val mainViewModel: MainViewModel = viewModel()
-                val rules by mainViewModel.rules.collectAsState()
-                val browsers by mainViewModel.installedBrowsers.collectAsState()
-                val defaultBrowserLabel by mainViewModel.defaultBrowserLabel.collectAsState()
-                val debugMode by mainViewModel.debugMode.collectAsState()
+                val activity = LocalActivity.current
+                val navBackStackEntry by navController.currentBackStackEntryAsState()
+                val currentRoute = navBackStackEntry?.destination?.route
 
                 var showAddDialog by remember { mutableStateOf(false) }
                 var editingRule by remember { mutableStateOf<BrowserRule?>(null) }
                 var showDefaultPicker by remember { mutableStateOf(false) }
+
+                BackHandler {
+                    if (currentRoute == "rule_list") {
+                        activity?.moveTaskToBack(true)
+                    } else {
+                        navController.popBackStack()
+                    }
+                }
 
                 NavHost(
                     navController = navController,
@@ -66,6 +76,10 @@ class MainActivity : ComponentActivity() {
                     popExitTransition = { ExitTransition.None }
                 ) {
                     composable("rule_list") {
+                        val rules by mainViewModel.rules.collectAsState()
+                        val defaultBrowserLabel by mainViewModel.defaultBrowserLabel.collectAsState()
+                        val debugMode by mainViewModel.debugMode.collectAsState()
+
                         RuleListScreen(
                             rules = rules,
                             defaultBrowserLabel = defaultBrowserLabel,
@@ -116,6 +130,8 @@ class MainActivity : ComponentActivity() {
 
                 // Add rule dialog
                 if (showAddDialog) {
+                    val browsers by mainViewModel.installedBrowsers.collectAsState()
+
                     AddEditRuleDialog(
                         editingRule = null,
                         installedBrowsers = browsers,
@@ -130,6 +146,8 @@ class MainActivity : ComponentActivity() {
 
                 // Edit rule dialog
                 editingRule?.let { rule ->
+                    val browsers by mainViewModel.installedBrowsers.collectAsState()
+
                     AddEditRuleDialog(
                         editingRule = rule,
                         installedBrowsers = browsers,
@@ -144,6 +162,8 @@ class MainActivity : ComponentActivity() {
 
                 // Default browser picker
                 if (showDefaultPicker) {
+                    val browsers by mainViewModel.installedBrowsers.collectAsState()
+
                     BrowserPickerDialog(
                         browsers = browsers,
                         selectedPackage = mainViewModel.defaultBrowserPackage.collectAsState().value,
