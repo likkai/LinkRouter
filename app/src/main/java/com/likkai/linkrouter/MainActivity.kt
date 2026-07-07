@@ -6,6 +6,9 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.AnimatedContentTransitionScope
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -54,7 +57,13 @@ class MainActivity : ComponentActivity() {
 
                 NavHost(
                     navController = navController,
-                    startDestination = "rule_list"
+                    startDestination = "rule_list",
+
+                    // Rules screen stays in place — no enter/exit animation
+                    enterTransition = { EnterTransition.None },
+                    exitTransition = { ExitTransition.None },
+                    popEnterTransition = { EnterTransition.None },
+                    popExitTransition = { ExitTransition.None }
                 ) {
                     composable("rule_list") {
                         RuleListScreen(
@@ -75,7 +84,21 @@ class MainActivity : ComponentActivity() {
                         )
                     }
 
-                    composable("settings") {
+                    composable(
+                        "settings",
+                        enterTransition = {
+                            slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Start)
+                        },
+                        exitTransition = {
+                            slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.End)
+                        },
+                        popEnterTransition = {
+                            slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.End)
+                        },
+                        popExitTransition = {
+                            slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.End)
+                        }
+                    ) {
                         val settingsViewModel: SettingsViewModel = viewModel()
                         val followRedirects by settingsViewModel.followRedirects.collectAsState()
                         val redirectDomains by settingsViewModel.redirectDomains.collectAsState()
