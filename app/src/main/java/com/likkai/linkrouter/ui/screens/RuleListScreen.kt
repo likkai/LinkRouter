@@ -32,7 +32,8 @@ fun RuleListScreen(
     onMoveUp: (BrowserRule) -> Unit,
     onMoveDown: (BrowserRule) -> Unit,
     onChangeDefaultBrowser: () -> Unit,
-    onToggleDebugMode: () -> Unit
+    onToggleDebugMode: () -> Unit,
+    onOpenSettings: () -> Unit
 ) {
     var showDeleteDialog by remember { mutableStateOf<BrowserRule?>(null) }
     var showMenu by remember { mutableStateOf(false) }
@@ -44,6 +45,9 @@ fun RuleListScreen(
                     Text("LinkRouter", fontWeight = FontWeight.Bold)
                 },
                 actions = {
+                    IconButton(onClick = onOpenSettings) {
+                        Icon(Icons.Default.Settings, contentDescription = "Settings")
+                    }
                     IconButton(onClick = { showMenu = true }) {
                         Icon(Icons.Default.MoreVert, contentDescription = "Menu")
                     }

@@ -8,12 +8,13 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.*
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.likkai.linkrouter.browser.BrowserApp
 import com.likkai.linkrouter.data.BrowserRule
 import com.likkai.linkrouter.ui.MainViewModel
+import com.likkai.linkrouter.ui.SettingsViewModel
 import com.likkai.linkrouter.ui.screens.AddEditRuleDialog
 import com.likkai.linkrouter.ui.screens.BrowserPickerDialog
 import com.likkai.linkrouter.ui.screens.RuleListScreen
+import com.likkai.linkrouter.ui.screens.SettingsScreen
 import com.likkai.linkrouter.ui.theme.LinkRouterTheme
 
 class MainActivity : ComponentActivity() {
@@ -33,71 +34,88 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             LinkRouterTheme {
-                val viewModel: MainViewModel = viewModel()
-                val rules by viewModel.rules.collectAsState()
-                val browsers by viewModel.installedBrowsers.collectAsState()
-                val defaultBrowserLabel by viewModel.defaultBrowserLabel.collectAsState()
-                val debugMode by viewModel.debugMode.collectAsState()
+                val mainViewModel: MainViewModel = viewModel()
+                val rules by mainViewModel.rules.collectAsState()
+                val browsers by mainViewModel.installedBrowsers.collectAsState()
+                val defaultBrowserLabel by mainViewModel.defaultBrowserLabel.collectAsState()
+                val debugMode by mainViewModel.debugMode.collectAsState()
 
                 var showAddDialog by remember { mutableStateOf(false) }
                 var editingRule by remember { mutableStateOf<BrowserRule?>(null) }
                 var showDefaultPicker by remember { mutableStateOf(false) }
+                var showSettings by remember { mutableStateOf(false) }
 
-                RuleListScreen(
-                    rules = rules,
-                    defaultBrowserLabel = defaultBrowserLabel,
-                    isDefaultBrowser = isDefaultBrowser,
-                    debugMode = debugMode,
-                    onSetDefault = { requestDefaultBrowser() },
-                    onAddRule = { showAddDialog = true },
-                    onEditRule = { rule -> editingRule = rule },
-                    onDeleteRule = { rule -> viewModel.deleteRule(rule) },
-                    onToggleRule = { rule -> viewModel.toggleRule(rule) },
-                    onMoveUp = { rule -> viewModel.moveRuleUp(rule, rules) },
-                    onMoveDown = { rule -> viewModel.moveRuleDown(rule, rules) },
-                    onChangeDefaultBrowser = { showDefaultPicker = true },
-                    onToggleDebugMode = { viewModel.toggleDebugMode() }
-                )
+                if (showSettings) {
+                    val settingsViewModel: SettingsViewModel = viewModel()
+                    val followRedirects by settingsViewModel.followRedirects.collectAsState()
+                    val redirectDomains by settingsViewModel.redirectDomains.collectAsState()
 
-                // Add rule dialog
-                if (showAddDialog) {
-                    AddEditRuleDialog(
-                        editingRule = null,
-                        installedBrowsers = browsers,
-                        onDismiss = { showAddDialog = false },
-                        onSave = { matchType, pattern, browser ->
-                            viewModel.addRule(matchType, pattern, browser)
-                            showAddDialog = false
-                        },
-                        onUpdate = { }
+                    SettingsScreen(
+                        followRedirects = followRedirects,
+                        redirectDomains = redirectDomains,
+                        onToggleFollowRedirects = { settingsViewModel.toggleFollowRedirects() },
+                        onAddDomain = { domain -> settingsViewModel.addDomain(domain) },
+                        onRemoveDomain = { domain -> settingsViewModel.removeDomain(domain) },
+                        onBack = { showSettings = false }
                     )
-                }
-
-                // Edit rule dialog
-                editingRule?.let { rule ->
-                    AddEditRuleDialog(
-                        editingRule = rule,
-                        installedBrowsers = browsers,
-                        onDismiss = { editingRule = null },
-                        onSave = { _, _, _ -> },
-                        onUpdate = { updatedRule ->
-                            viewModel.updateRule(updatedRule)
-                            editingRule = null
-                        }
+                } else {
+                    RuleListScreen(
+                        rules = rules,
+                        defaultBrowserLabel = defaultBrowserLabel,
+                        isDefaultBrowser = isDefaultBrowser,
+                        debugMode = debugMode,
+                        onSetDefault = { requestDefaultBrowser() },
+                        onAddRule = { showAddDialog = true },
+                        onEditRule = { rule -> editingRule = rule },
+                        onDeleteRule = { rule -> mainViewModel.deleteRule(rule) },
+                        onToggleRule = { rule -> mainViewModel.toggleRule(rule) },
+                        onMoveUp = { rule -> mainViewModel.moveRuleUp(rule, rules) },
+                        onMoveDown = { rule -> mainViewModel.moveRuleDown(rule, rules) },
+                        onChangeDefaultBrowser = { showDefaultPicker = true },
+                        onToggleDebugMode = { mainViewModel.toggleDebugMode() },
+                        onOpenSettings = { showSettings = true }
                     )
-                }
 
-                // Default browser picker
-                if (showDefaultPicker) {
-                    BrowserPickerDialog(
-                        browsers = browsers,
-                        selectedPackage = viewModel.defaultBrowserPackage.collectAsState().value,
-                        onSelect = { browser ->
-                            viewModel.setDefaultBrowser(browser)
-                            showDefaultPicker = false
-                        },
-                        onDismiss = { showDefaultPicker = false }
-                    )
+                    // Add rule dialog
+                    if (showAddDialog) {
+                        AddEditRuleDialog(
+                            editingRule = null,
+                            installedBrowsers = browsers,
+                            onDismiss = { showAddDialog = false },
+                            onSave = { matchType, pattern, browser ->
+                                mainViewModel.addRule(matchType, pattern, browser)
+                                showAddDialog = false
+                            },
+                            onUpdate = { }
+                        )
+                    }
+
+                    // Edit rule dialog
+                    editingRule?.let { rule ->
+                        AddEditRuleDialog(
+                            editingRule = rule,
+                            installedBrowsers = browsers,
+                            onDismiss = { editingRule = null },
+                            onSave = { _, _, _ -> },
+                            onUpdate = { updatedRule ->
+                                mainViewModel.updateRule(updatedRule)
+                                editingRule = null
+                            }
+                        )
+                    }
+
+                    // Default browser picker
+                    if (showDefaultPicker) {
+                        BrowserPickerDialog(
+                            browsers = browsers,
+                            selectedPackage = mainViewModel.defaultBrowserPackage.collectAsState().value,
+                            onSelect = { browser ->
+                                mainViewModel.setDefaultBrowser(browser)
+                                showDefaultPicker = false
+                            },
+                            onDismiss = { showDefaultPicker = false }
+                        )
+                    }
                 }
             }
         }

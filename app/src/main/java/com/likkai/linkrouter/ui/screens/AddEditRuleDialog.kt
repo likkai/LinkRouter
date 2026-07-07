@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.OpenInBrowser
 import androidx.compose.material3.*
+import com.likkai.linkrouter.ui.components.BrowserIcon
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -103,7 +104,7 @@ fun AddEditRuleDialog(
                         )
                     },
                     modifier = Modifier.fillMaxWidth(),
-                    singleLine = true
+                    maxLines = 1
                 )
 
                 // Browser selector
@@ -123,11 +124,18 @@ fun AddEditRuleDialog(
                             .padding(12.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Icon(
-                            Icons.Default.OpenInBrowser,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary
-                        )
+                        if (selectedBrowser != null) {
+                            BrowserIcon(
+                                packageName = selectedBrowser!!.packageName,
+                                size = 28.dp
+                            )
+                        } else {
+                            Icon(
+                                Icons.Default.OpenInBrowser,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                        }
                         Spacer(modifier = Modifier.width(12.dp))
                         Text(
                             selectedBrowser?.label ?: "Select a browser",

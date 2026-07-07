@@ -6,14 +6,13 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.OpenInBrowser
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.likkai.linkrouter.browser.BrowserApp
+import com.likkai.linkrouter.ui.components.BrowserIcon
 
 @Composable
 fun BrowserPickerDialog(
@@ -53,13 +52,9 @@ fun BrowserPickerDialog(
                                 )
                             },
                             leadingContent = {
-                                Icon(
-                                    Icons.Default.OpenInBrowser,
-                                    contentDescription = null,
-                                    tint = if (isSelected)
-                                        MaterialTheme.colorScheme.primary
-                                    else
-                                        MaterialTheme.colorScheme.onSurfaceVariant
+                                BrowserIcon(
+                                    packageName = browser.packageName,
+                                    size = 32.dp
                                 )
                             },
                             trailingContent = {
