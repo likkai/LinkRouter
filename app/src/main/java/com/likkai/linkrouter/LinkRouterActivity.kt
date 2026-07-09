@@ -37,7 +37,7 @@ class LinkRouterActivity : ComponentActivity() {
         // Only handle http and https
         if (scheme != "http" && scheme != "https") {
             Log.w(TAG, "Ignoring non-http(s) scheme: $scheme")
-            finish()
+            finishAndRemoveTask()
             return
         }
 
@@ -62,12 +62,12 @@ class LinkRouterActivity : ComponentActivity() {
                 val resolvedUrl = resolveRedirect(url, app, debug)
                 if (debug) Log.d(TAG, "Resolved URL: $resolvedUrl")
                 routeUrl(resolvedUrl, app, debug)
-                finish()
+                finishAndRemoveTask()
             }
         } else {
             // No redirect needed, route immediately
             routeUrl(url, app, debug)
-            finish()
+            finishAndRemoveTask()
         }
     }
 
