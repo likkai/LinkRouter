@@ -1,7 +1,5 @@
 package com.likkai.linkrouter
 
-import android.app.ActivityManager
-import android.app.ApplicationExitInfo
 import android.net.Uri
 import android.os.Bundle
 import android.util.Log
@@ -49,7 +47,6 @@ class LinkRouterActivity : ComponentActivity() {
         if (debug) {
             Log.d(TAG, "────────────────────────────────────")
             Log.d(TAG, "Step 1: Received URL: $url")
-            logPreviousExitReasons()
         }
 
         // Show a resolving popup preemptively (will be removed on finishAndRemoveTask)
@@ -165,50 +162,6 @@ class LinkRouterActivity : ComponentActivity() {
                 launcher.launchFallback(url)
             }
         }
-    }
-
-    /**
-     * Logs why the process was last killed (API 30+).
-     * Useful for diagnosing why redirect caches were empty.
-     */
-    private fun logPreviousExitReasons() {
-        try {
-            val am = getSystemService(ActivityManager::class.java)
-            val reasons = am.getHistoricalProcessExitReasons(packageName, 0, 3)
-            if (reasons.isEmpty()) {
-                Log.d(TAG, "  No previous exit reasons recorded")
-            } else {
-                reasons.forEachIndexed { i, info ->
-                    Log.d(TAG, "  Exit #$i: reason=${exitReasonToString(info.reason)}" +
-                            ", importance=${info.importance}" +
-                            ", description=${info.description}" +
-                            ", timestamp=${info.timestamp}" +
-                            ", ago=${(System.currentTimeMillis() - info.timestamp) / 1000}s")
-                }
-            }
-        } catch (e: Exception) {
-            Log.w(TAG, "  Could not read exit reasons", e)
-        }
-    }
-
-    private fun exitReasonToString(reason: Int): String = when (reason) {
-        ApplicationExitInfo.REASON_EXIT_SELF -> "EXIT_SELF"
-        ApplicationExitInfo.REASON_SIGNALED -> "SIGNALED"
-        ApplicationExitInfo.REASON_LOW_MEMORY -> "LOW_MEMORY"
-        ApplicationExitInfo.REASON_CRASH -> "CRASH"
-        ApplicationExitInfo.REASON_CRASH_NATIVE -> "CRASH_NATIVE"
-        ApplicationExitInfo.REASON_ANR -> "ANR"
-        ApplicationExitInfo.REASON_INITIALIZATION_FAILURE -> "INIT_FAILURE"
-        ApplicationExitInfo.REASON_PERMISSION_CHANGE -> "PERMISSION_CHANGE"
-        ApplicationExitInfo.REASON_EXCESSIVE_RESOURCE_USAGE -> "EXCESSIVE_RESOURCE"
-        ApplicationExitInfo.REASON_USER_REQUESTED -> "USER_REQUESTED"
-        ApplicationExitInfo.REASON_USER_STOPPED -> "USER_STOPPED"
-        ApplicationExitInfo.REASON_DEPENDENCY_DIED -> "DEPENDENCY_DIED"
-        ApplicationExitInfo.REASON_OTHER -> "OTHER"
-        ApplicationExitInfo.REASON_FREEZER -> "FREEZER"
-        ApplicationExitInfo.REASON_PACKAGE_STATE_CHANGE -> "PACKAGE_STATE_CHANGE"
-        ApplicationExitInfo.REASON_PACKAGE_UPDATED -> "PACKAGE_UPDATED"
-        else -> "UNKNOWN($reason)"
     }
 }
 
