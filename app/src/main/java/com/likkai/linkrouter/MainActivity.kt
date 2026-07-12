@@ -28,6 +28,8 @@ import com.likkai.linkrouter.ui.screens.AddEditRuleDialog
 import com.likkai.linkrouter.ui.screens.BrowserPickerDialog
 import com.likkai.linkrouter.ui.screens.RuleListScreen
 import com.likkai.linkrouter.ui.screens.SettingsScreen
+import com.likkai.linkrouter.ui.screens.FollowRedirectsScreen
+import com.likkai.linkrouter.ui.screens.CacheHistoryScreen
 import com.likkai.linkrouter.ui.theme.LinkRouterTheme
 
 class MainActivity : ComponentActivity() {
@@ -103,12 +105,26 @@ class MainActivity : ComponentActivity() {
                         enterTransition = {
                             slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Start)
                         },
-                        exitTransition = {
+                        exitTransition = { ExitTransition.None },
+                        popEnterTransition = { EnterTransition.None },
+                        popExitTransition = {
                             slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.End)
+                        }
+                    ) {
+                        SettingsScreen(
+                            onNavigateToFollowRedirects = { navController.navigate("follow_redirects") },
+                            onNavigateToCacheHistory = { navController.navigate("cache_history") },
+                            onBack = { navController.popBackStack() }
+                        )
+                    }
+
+                    composable(
+                        "follow_redirects",
+                        enterTransition = {
+                            slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Start)
                         },
-                        popEnterTransition = {
-                            slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.End)
-                        },
+                        exitTransition = { ExitTransition.None },
+                        popEnterTransition = { EnterTransition.None },
                         popExitTransition = {
                             slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.End)
                         }
@@ -117,12 +133,33 @@ class MainActivity : ComponentActivity() {
                         val followRedirects by settingsViewModel.followRedirects.collectAsState()
                         val redirectDomains by settingsViewModel.redirectDomains.collectAsState()
 
-                        SettingsScreen(
+                        FollowRedirectsScreen(
                             followRedirects = followRedirects,
                             redirectDomains = redirectDomains,
                             onToggleFollowRedirects = { settingsViewModel.toggleFollowRedirects() },
                             onAddDomain = { domain -> settingsViewModel.addDomain(domain) },
                             onRemoveDomain = { domain -> settingsViewModel.removeDomain(domain) },
+                            onBack = { navController.popBackStack() }
+                        )
+                    }
+
+                    composable(
+                        "cache_history",
+                        enterTransition = {
+                            slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Start)
+                        },
+                        exitTransition = { ExitTransition.None },
+                        popEnterTransition = { EnterTransition.None },
+                        popExitTransition = {
+                            slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.End)
+                        }
+                    ) {
+                        val settingsViewModel: SettingsViewModel = viewModel()
+                        val cacheHistory by settingsViewModel.redirectCache.collectAsState()
+
+                        CacheHistoryScreen(
+                            cacheHistory = cacheHistory,
+                            onDeleteCache = { cache -> settingsViewModel.deleteCacheEntry(cache) },
                             onBack = { navController.popBackStack() }
                         )
                     }
