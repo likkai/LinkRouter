@@ -1,11 +1,7 @@
 package com.likkai.linkrouter
 
 import android.app.role.RoleManager
-import android.content.Intent
-import android.net.Uri
 import android.os.Bundle
-import android.os.PowerManager
-import android.provider.Settings
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.LocalActivity
@@ -37,7 +33,6 @@ import com.likkai.linkrouter.ui.theme.LinkRouterTheme
 class MainActivity : ComponentActivity() {
 
     private var isDefaultBrowser by mutableStateOf(false)
-    private var isBatteryOptimized by mutableStateOf(true)
 
     private val requestRoleLauncher = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
@@ -49,7 +44,6 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         checkDefaultBrowserStatus()
-        checkBatteryOptimization()
 
         setContent {
             LinkRouterTheme {
@@ -90,10 +84,8 @@ class MainActivity : ComponentActivity() {
                             rules = rules,
                             defaultBrowserLabel = defaultBrowserLabel,
                             isDefaultBrowser = isDefaultBrowser,
-                            isBatteryOptimized = isBatteryOptimized,
                             debugMode = debugMode,
                             onSetDefault = { requestDefaultBrowser() },
-                            onRequestBatteryOptimization = { requestBatteryOptimization() },
                             onAddRule = { showAddDialog = true },
                             onEditRule = { rule -> editingRule = rule },
                             onDeleteRule = { rule -> mainViewModel.deleteRule(rule) },
@@ -189,7 +181,6 @@ class MainActivity : ComponentActivity() {
     override fun onResume() {
         super.onResume()
         checkDefaultBrowserStatus()
-        checkBatteryOptimization()
     }
 
     private fun checkDefaultBrowserStatus() {
@@ -203,17 +194,5 @@ class MainActivity : ComponentActivity() {
             val intent = roleManager.createRequestRoleIntent(RoleManager.ROLE_BROWSER)
             requestRoleLauncher.launch(intent)
         }
-    }
-
-    private fun checkBatteryOptimization() {
-        val pm = getSystemService(PowerManager::class.java)
-        isBatteryOptimized = pm.isIgnoringBatteryOptimizations(packageName)
-    }
-
-    private fun requestBatteryOptimization() {
-        val intent = Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS).apply {
-            data = Uri.parse("package:$packageName")
-        }
-        startActivity(intent)
     }
 }

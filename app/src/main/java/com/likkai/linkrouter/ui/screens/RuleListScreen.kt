@@ -23,10 +23,8 @@ fun RuleListScreen(
     rules: List<BrowserRule>,
     defaultBrowserLabel: String?,
     isDefaultBrowser: Boolean,
-    isBatteryOptimized: Boolean,
     debugMode: Boolean,
     onSetDefault: () -> Unit,
-    onRequestBatteryOptimization: () -> Unit,
     onAddRule: () -> Unit,
     onEditRule: (BrowserRule) -> Unit,
     onDeleteRule: (BrowserRule) -> Unit,
@@ -119,43 +117,6 @@ fun RuleListScreen(
                             Spacer(modifier = Modifier.width(8.dp))
                             FilledTonalButton(onClick = onSetDefault) {
                                 Text("Set Default")
-                            }
-                        }
-                    }
-                }
-            }
-
-            // Battery optimization banner
-            if (!isBatteryOptimized) {
-                item {
-                    Card(
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.tertiaryContainer
-                        )
-                    ) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(16.dp),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Column(modifier = Modifier.weight(1f)) {
-                                Text(
-                                    "Battery restricted",
-                                    style = MaterialTheme.typography.titleSmall,
-                                    color = MaterialTheme.colorScheme.onTertiaryContainer
-                                )
-                                Text(
-                                    "Disable battery optimization so links can be routed reliably in the background",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.7f)
-                                )
-                            }
-                            Spacer(modifier = Modifier.width(8.dp))
-                            FilledTonalButton(onClick = onRequestBatteryOptimization) {
-                                Text("Disable")
                             }
                         }
                     }
